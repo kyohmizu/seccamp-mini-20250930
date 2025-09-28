@@ -59,6 +59,8 @@
 
 ## 2. Kubernetes とは
 
+<img src="https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png" width="120">
+
 Kubernetes は、クラウドネイティブの中核となる、コンテナシステムを支える代表的なプラットフォームです。
 
 > Kubernetesは、宣言的な構成管理と自動化を促進し、コンテナ化されたワークロードやサービスを管理するための、ポータブルで拡張性のあるオープンソースのプラットフォームです。Kubernetesは巨大で急速に成長しているエコシステムを備えており、それらのサービス、サポート、ツールは幅広い形で利用可能です。
@@ -509,6 +511,8 @@ source <(kubectl completion zsh)
 
 ### 6.2 Helm
 
+<img src="https://helm.sh/img/helm.svg" width="120">
+
 https://helm.sh/
 
 Kubernetes のパッケージ管理ツール。複数のリソースを Chart という単位で一まとめにし、デプロイやバージョン管理を行うことができます。複数の Helm Chart をまとめて管理することができる [Helmfile](https://github.com/helmfile/helmfile) もあります。
@@ -557,6 +561,8 @@ Kubernetes クラスタを手動で構築するプロセスを学ぶためのガ
 難易度はやや高めですが、Kubernetes についてより深く理解したい方はぜひトライしてみてください。
 
 ### 7.2 一日で学ぶクラウドネイティブ技術実践ハンズオン
+
+<img src="https://er-static.s3.amazonaws.com/uploads/hosts/bc85ef3e29b663fc67f9d079e4499019b7441351.png" width="300">
 
 https://github.com/cloudnativedaysjp/cnd-handson
 

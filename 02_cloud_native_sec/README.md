@@ -302,6 +302,8 @@ Kubernetesのセキュリティを強化するためには、さまざまなツ�
 
 ### Trivy
 
+<img src="https://github.com/aquasecurity/trivy/raw/main/docs/imgs/logo.png" width="120">
+
 https://github.com/aquasecurity/trivy
 
 オープンソースのセキュリティスキャナーで、コンテナイメージ、ファイルシステム、Kubernetes クラスタ、リポジトリ内の脆弱性や設定ミスを検出します。<br/>
@@ -316,6 +318,8 @@ CI/CD パイプラインへの統合も容易で、クラウドネイティブ�
 
 ### Tetragon
 
+<img src="https://github.com/cilium/tetragon/raw/main/docs/assets/icons/logo-dark.svg" width="300">
+
 https://github.com/cilium/tetragon
 
 eBPF を活用したセキュリティおよび監視ツールで、Kubernetes クラスタ内の実行中のプロセスやシステムコールをリアルタイムで監視します。<br/>
@@ -328,6 +332,8 @@ Tetragon を使用することで、セキュリティイベントの検出や�
 - [Tracee](https://github.com/aquasecurity/tracee)
 
 ### OPA (Open Policy Agent) Gatekeeper
+
+<img src="https://www.openpolicyagent.org/assets/images/logo-text-dark-20ab84c6b2ba2433801b16fa43fe6550.png" width="300">
 
 https://github.com/open-policy-agent/gatekeeper
 
@@ -343,6 +349,8 @@ Open Policy Agent (OPA) と統合されており、Kubernetes リソースに対
 
 ### External Secrets
 
+<img src="https://github.com/external-secrets/external-secrets/raw/main/assets/eso-logo-large.png" width="120">
+
 https://github.com/external-secrets/external-secrets
 
 外部のシークレット管理システムから、Kubernetes クラスタ内にシークレットを安全に取得・同期するための Kubernetes オペレーターです。
@@ -355,6 +363,8 @@ AWS Secrets Manager、HashiCorp Vault などの外部シークレットストア
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
 
 ### cosign
+
+<img src="https://raw.githubusercontent.com/sigstore/community/main/artwork/cosign/horizontal/color/sigstore_cosign-horizontal-color.svg" width="300">
 
 https://github.com/sigstore/cosign
 
