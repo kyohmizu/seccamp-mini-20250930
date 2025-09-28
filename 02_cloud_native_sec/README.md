@@ -146,7 +146,7 @@ Kubernetesセキュリティは、Cloud、Cluster、Container、Codeの4つの�
 
 ### 2.4 アプリケーションの開発ライフサイクルとセキュリティの統合
 
-https://github.com/cncf/tag-security/blob/main/security-whitepaper/v2/cloud-native-security-whitepaper-ja.md#%E3%82%AF%E3%83%A9%E3%82%A6%E3%83%89%E3%83%8D%E3%82%A4%E3%83%86%E3%82%A3%E3%83%96%E3%83%AC%E3%82%A4%E3%83%A4%E3%83%BC
+https://github.com/cncf/tag-security/blob/main/community/resources/security-whitepaper/v2/cloud-native-security-whitepaper.md
 
 クラウドネイティブ開発は、「開発（Develop）」「配布（Distribute）」「デプロイ（Deploy）」「実行時（Runtime）」という明確なアプリケーションライフサイクルフェーズでモデル化できます。セキュリティは、これらのライフサイクル全体にわたって注入されるべきであり、セキュリティテストは、継続的な改善のための短く実用的なフィードバックサイクルを生成するために、コンプライアンス違反や設定ミスを早期に特定する必要があります。
 

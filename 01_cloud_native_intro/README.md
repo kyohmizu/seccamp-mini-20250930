@@ -196,6 +196,38 @@ Pod は Kubernetes の最小のデプロイ単位で、1つ以上のコンテナ
 
 通常は Pod を直接作成することはなく、Deployment や Job などのワークロードリソースを使用して Pod を作成します。
 
+```mermaid
+graph TD
+    subgraph Worker_Node
+        K(Kubelet)
+        
+        subgraph Pod[Pod: 最小デプロイ単位]
+            direction TB
+            N(共有ネットワーク)
+            V{{共有ストレージ}}
+
+            subgraph Containers
+                C1(メインコンテナ: アプリケーション)
+                C2(サイドカーコンテナ: ログ収集、プロキシなど)
+            end
+
+            Containers --> N
+            Containers --> V
+        end
+        
+        %% KubeletはPod全体を管理・監視
+        K -->|管理・実行| Pod
+
+    end
+
+    style Pod fill:#005B9A, color:#FFFFFF, stroke:#FFFFFF, stroke-width:2px
+    style N fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF
+    style V fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+    style C1 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+    style C2 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+    style K fill:#8C52FF, color:#FFFFFF, stroke:#FFFFFF
+```
+
 ### 5.2 ReplicaSet
 
 https://kubernetes.io/ja/docs/concepts/workloads/controllers/replicaset/
@@ -208,6 +240,30 @@ https://kubernetes.io/ja/docs/concepts/workloads/controllers/deployment/
 
 Deployment は、アプリケーションのデプロイと管理を簡素化するためのリソースです。Deploymentを使用すると、アプリケーションのロールアウト、ロールバック、スケーリングなどを簡単に行うことができます。Deployment は内部的に ReplicaSet を管理し、宣言された状態を維持します。
 
+```mermaid
+graph TD
+    %% K8sコンポーネントの定義
+    A[Deployment: 更新とバージョン管理]
+    B(ReplicaSet: Pod数の維持)
+    
+    %% Pod群の定義 (括弧を削除)
+    C[Pod 1]
+    D[Pod 2]
+    E[Pod 3]
+    
+    %% 階層関係とフロー
+    A -->|管理| B
+    B -->|作成・監視| C
+    B -->|作成・監視| D
+    B -->|作成・監視| E
+
+    style A fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF, stroke-width:2px
+    style B fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+    style C fill:#FFCC00, color:#000000, stroke:#FFFFFF
+    style D fill:#FFCC00, color:#000000, stroke:#FFFFFF
+    style E fill:#FFCC00, color:#000000, stroke:#FFFFFF
+```
+
 Deployment リソースの作成からコンテナ実行までの流れは下図の通りです。各 Kubernetes リソースのコントローラがそれぞれリソースを作成・変更していき、最終的に kubelet がワーカーノードにコンテナを作成します。
 
 ![pod-chain](https://opensource.com/sites/default/files/uploads/pod-chain_0.png)
@@ -219,6 +275,44 @@ Deployment リソースの作成からコンテナ実行までの流れは下図
 https://kubernetes.io/ja/docs/concepts/workloads/controllers/daemonset/
 
 DaemonSet は、クラスタ内のすべてのノード、もしくは特定のノードにPodをデプロイするためのリソースです。例えば、ノードのログ収集やモニタリングエージェントをデプロイする際に使用されます。ノードが追加または削除されると、それに応じて Pod が自動的に追加または削除されます。
+
+```mermaid
+graph TD
+    subgraph Control_Plane
+        DS[DaemonSet: コントローラー]
+        style DS fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF, stroke-width:2px
+    end
+    
+    subgraph K8s_Cluster
+        subgraph Worker_Node_A
+            P1[Log Agent Pod]
+            style P1 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        end
+        subgraph Worker_Node_B
+            P2[Log Agent Pod]
+            style P2 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        end
+        subgraph Worker_Node_D
+            P3(Podなし)
+            style P3 fill:#AAAAAA, color:#000000, stroke:#FFFFFF
+        end
+    end
+
+    %% 流れと管理
+    DS -->|既存ノードを監視・デプロイ| Worker_Node_A
+    DS -->|既存ノードを監視・デプロイ| Worker_Node_B
+    
+    %% 新規ノードの検知とデプロイ
+    DS --"新規ノード検知"--> Worker_Node_D
+    
+    %% P4を定義（新規ノード上に配置されるPod）
+    P4[Log Agent Pod]
+    style P4 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+
+    %% P4がWorker_Node_Dに配置されることを示す（ノードDとP4の関連付け）
+    DS -->|自動デプロイ| P4
+    P4 --> Worker_Node_D
+```
 
 ### 5.5 Job
 
@@ -238,6 +332,35 @@ Service には3つの主要なタイプがあります。
 - **NodePort**: 各NodeのIPにて、静的なポート(NodePort)上でServiceを公開します。
 - **LoadBalancer**: クラウドプロバイダのロードバランサを使用して、Serviceを外部に公開します。
 
+```mermaid
+graph TD
+    %% 外部からのアクセス
+    External([外部からのトラフィック])
+    
+    subgraph Service_Layer
+        SVC[[Service: 安定したアクセスポイント]]
+        style SVC fill:#FF6F61, color:#FFFFFF, stroke:#FFFFFF, stroke-width:3px
+    end
+
+    subgraph Worker_Nodes
+        P1[Pod 1: Label=app:web]
+        P2[Pod 2: Label=app:web]
+        P3[Pod 3: Label=app:web]
+        
+        style P1 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        style P2 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        style P3 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+    end
+
+    %% 接続関係
+    External -->|ClusterIP/NodePort| SVC
+    
+    %% ServiceはSelectorでPod群を抽象化し、トラフィックを分散
+    SVC -- "selector: app=web" --> P1
+    SVC -- "selector: app=web" --> P2
+    SVC -- "selector: app=web" --> P3
+```
+
 ### 5.7 Ingress
 
 https://kubernetes.io/ja/docs/concepts/services-networking/ingress/
@@ -246,11 +369,85 @@ Ingress は、HTTPやHTTPSのルーティングを提供するリソースです
 
 Ingress を使用するためには Ingress コントローラが必要です。EKS や GKE などのマネージド Kubernetes では、クラウドプロバイダー固有の Ingress コントローラが提供されていますが、それ以外の場合は別途インストールが必要です。オンプレミス環境では、Ingress NGINX Controller などの Ingress コントローラをデプロイする必要があります。
 
+```mermaid
+graph TD
+    subgraph Kubernetes Cluster
+        
+        subgraph Control Plane
+            I_INGRESS[Ingress: ルーティングルール]
+            style I_INGRESS fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF, stroke-width:2px
+        end
+        
+        subgraph Worker Nodes
+            I_IC(Ingress Controller)
+            style I_IC fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+            
+            I_SVCA[[Service A: /app-a]]
+            I_PODA[Pod A]
+            I_SVCB[[Service B: /app-b]]
+            I_PODB[Pod B]
+            
+            style I_SVCA fill:#FF6F61, color:#FFFFFF, stroke:#FFFFFF
+            style I_SVCB fill:#FF6F61, color:#FFFFFF, stroke:#FFFFFF
+            style I_PODA fill:#FFCC00, color:#000000, stroke:#FFFFFF
+            style I_PODB fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        end
+        
+        %% 接続関係 (ノードはWorker Nodes内に物理的に存在)
+        I_IC -->|ルール参照| I_INGRESS
+        I_IC -- "/app-a" --> I_SVCA
+        I_IC -- "/app-b" --> I_SVCB
+        
+        I_SVCA -->|負荷分散| I_PODA
+        I_SVCB -->|負荷分散| I_PODB
+    end
+
+    %% 外部からのアクセス (クラスターの外)
+    I_USER([インターネット])
+    style I_USER fill:#8C52FF, color:#FFFFFF, stroke:#FFFFFF
+
+    I_USER -->|HTTPアクセス| I_IC
+```
+
 ### 5.8 ConfigMap
 
 https://kubernetes.io/ja/docs/concepts/configuration/configmap/
 
 ConfigMap は、設定データを管理するためのリソースです。Pod 内のコンテナに環境変数、コマンドライン引数、設定ファイルとして渡すことができます。これにより、コンテナイメージを再ビルドせずにアプリケーションの設定を変更することができます。
+
+```mermaid
+graph TD
+    subgraph K8s_Control_Plane
+        CM[ConfigMap: 設定データ]
+        style CM fill:#FF7F00, color:#FFFFFF, stroke:#FFFFFF, stroke-width:2px
+    end
+
+    subgraph Worker_Node
+        K(Kubelet)
+        style K fill:#8C52FF, color:#FFFFFF, stroke:#FFFFFF
+        
+        subgraph Pod[Pod]
+            direction TB
+            V{{ConfigMap Volume}}
+            style V fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+
+            C1(コンテナ: アプリケーション)
+            style C1 fill:#FFCC00, color:#000000, stroke:#FFFFFF
+            
+            subgraph Container_Filesystem
+                F["/etc/config/app.conf: 設定ファイル"]
+                style F fill:#AAAAAA, color:#000000, stroke:#FFFFFF
+            end
+
+            V -->|マウント| F
+        end
+        
+        %% 流れの定義
+        CM -->|データ提供| V
+        K -->|Pod管理・配置| Pod
+        C1 -->|設定を読み込み| F
+    end
+```
 
 ### 5.9 Secret
 
@@ -326,6 +523,8 @@ helm install mysql bitnami/mysql
 ```
 
 ### 6.3 krew
+
+<img src="https://github.com/kubernetes-sigs/krew/raw/master/assets/logo/horizontal/color/krew-horizontal-color.png" width="300">
 
 https://krew.sigs.k8s.io/
 

@@ -21,6 +21,63 @@ cd ch01
 
 ## 1. 基本リソースの把握
 
+`kubectl` コマンドを使用して、Kubernetes のリソースを操作します。
+
+```mermaid
+graph TD
+    subgraph ユーザー環境
+        CLI(kubectl CLI)
+        style CLI fill:#8C52FF, color:#FFFFFF, stroke:#FFFFFF
+    end
+    
+    subgraph Kubernetes Cluster
+        subgraph Control Plane
+            APISERVER[API Server: 外部からの受付窓口]
+            SCHEDULER(Scheduler: Pod の配置決定)
+            ETCD{{etcd: 全体の状態を保存}}
+            
+            style APISERVER fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF
+            style SCHEDULER fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF
+            style ETCD fill:#00A1F2, color:#FFFFFF, stroke:#FFFFFF
+        end
+
+        subgraph Worker Node A
+            KUBELET_A(Kubelet: ノード管理エージェント)
+            PROXY_A[kube-proxy: ネットワーク制御]
+            POD_A[Pod: アプリケーション実行単位]
+            
+            style KUBELET_A fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+            style PROXY_A fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+            style POD_A fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        end
+        
+        subgraph Worker Node B
+            KUBELET_B(Kubelet: ノード管理エージェント)
+            PROXY_B[kube-proxy: ネットワーク制御]
+            POD_B[Pod: アプリケーション実行単位]
+            
+            style KUBELET_B fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+            style PROXY_B fill:#00CC99, color:#FFFFFF, stroke:#FFFFFF
+            style POD_B fill:#FFCC00, color:#000000, stroke:#FFFFFF
+        end
+        
+        %% 接続とデータフロー
+        CLI -->|REST API| APISERVER
+        
+        APISERVER <-->|状態の読み書き| ETCD
+        APISERVER -->|Pod 配置指示| SCHEDULER
+        
+        SCHEDULER -->|Pod 配置命令| KUBELET_A
+        SCHEDULER -->|Pod 配置命令| KUBELET_B
+        
+        APISERVER <-->|ノード監視・Pod 状態報告| KUBELET_A
+        APISERVER <-->|ノード監視・Pod 状態報告| KUBELET_B
+        
+        KUBELET_A -->|コンテナ実行・管理| POD_A
+        KUBELET_B -->|コンテナ実行・管理| POD_B
+    end
+```
+
 ### 1.1 Pod
 
 以下のコマンドで Pod のマニフェストファイルを作成します。
