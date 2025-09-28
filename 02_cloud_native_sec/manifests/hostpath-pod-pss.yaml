@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod-pss
+  namespace: pss-test
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu:22.04
+    command: ["/bin/bash"]
+    args: ["-c", "sleep 3600"]
+    volumeMounts:
+    - name: host-root
+      mountPath: /host
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory

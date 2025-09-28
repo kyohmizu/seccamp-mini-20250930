@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod-pss
+  namespace: pss-test
+spec:
+  hostPID: true
+  containers:
+  - name: ubuntu
+    image: ubuntu:22.04
+    command: ["/bin/bash"]
+    args: ["-c", "sleep 3600"]
+    securityContext:
+      privileged: true
