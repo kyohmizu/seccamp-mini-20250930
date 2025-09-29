@@ -33,7 +33,7 @@ cd ch02
 コンテナブレイクアウトは、コンテナ内から脱出してホストシステムにアクセスする攻撃手法です。<br/>
 コンテナは基本的にはプロセス分離の技術であり、適切な設定がされていない場合、攻撃者がホストシステムに影響を与える可能性があります。
 
-主なブレイクアウト手法：
+主なブレイクアウト手法:
 
 1. **特権コンテナの悪用**: `privileged: true` が設定されたコンテナからのエスケープ
 2. **危険な capabilities**: 不要な Linux capabilities の付与による権限昇格
@@ -41,7 +41,7 @@ cd ch02
 4. **危険なボリュームマウント**: ホストの重要なディレクトリのマウント
 5. **脆弱なカーネルの悪用**: コンテナランタイムやカーネルの脆弱性
 
-これらの攻撃手法を実際に体験し、対策の重要性を理解しましょう。
+演習を通して攻撃手法を実際に体験し、対策の重要性を理解しましょう。
 
 ### 1.2 nsenter を使ったホストの namespace への侵入
 
@@ -296,7 +296,7 @@ exit  # kubectl exec から抜ける
 ## 2. Security Context によるコンテナブレイクアウト対策
 
 Security Context を適切に設定すれば、コンテナブレイクアウトを防止できるのか検証してみましょう。<br/>
-Security Context には様々な設定がありますが、本演習では以下2つの設定を取り扱います。
+Security Context にはさまざまな設定がありますが、本演習では以下2つの設定を取り扱います。
 
 - capabilities: コンテナプロセスの使用できる capabilities を制限
 - runAsNonRoot: コンテナプロセスの実行ユーザーをroot以外に強制
@@ -875,7 +875,9 @@ kubectl delete ns pss-test
 
 ## 参考
 
-- https://container-security.dev/security/breakout-to-host
-- https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-- https://kubernetes.io/docs/concepts/security/pod-security-standards/
-- https://kubernetes.io/docs/tutorials/security/ns-level-pss/
+- [ホストへのエスケープ - Container Security Book](https://container-security.dev/security/breakout-to-host)
+- Kubernetes Documentation
+  - [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+  - [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+  - [Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
+  - [Apply Pod Security Standards at the Namespace Level](https://kubernetes.io/docs/tutorials/security/ns-level-pss/)
