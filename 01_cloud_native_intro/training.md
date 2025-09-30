@@ -6,7 +6,9 @@
     - [1.2 Deployment](#12-deployment)
     - [1.3 Service](#13-service)
     - [1.4 Ingress](#14-ingress)
-    - [1.5 まとめ](#15-まとめ)
+    - [1.5 Secret](#15-secret)
+    - [1.6 まとめ](#16-まとめ)
+    - [1.7 環境のクリーンアップ](#17-環境のクリーンアップ)
   - [2. Kubernetes コンポーネントの把握](#2-kubernetes-コンポーネントの把握)
     - [2.1 コントロールプレーン](#21-コントロールプレーン)
       - [kube-apiserver](#kube-apiserver)
@@ -19,7 +21,6 @@
       - [コンテナランタイム](#コンテナランタイム)
     - [2.3 クラスタ構成の把握](#23-クラスタ構成の把握)
     - [2.4 まとめ](#24-まとめ)
-  - [環境のクリーンアップ](#環境のクリーンアップ)
   - [参考](#参考)
   - [次のステップ](#次のステップ)
 
@@ -949,9 +950,280 @@ Commercial support is available at
 
 </details>
 
-### 1.5 まとめ
+### 1.5 Secret
+
+Secret は、パスワード、認証トークン、SSH キーなどの機密データを安全に保存・管理するためのリソースです。Secret を使用することで、機密情報をコンテナイメージやマニフェストファイルにハードコーディングすることを避けることができます。
+
+Secret には複数の種類がありますが、ここでは最も一般的な `Opaque` タイプ（任意のキー・バリューペア）を使用します。
+
+基本的な Secret を作成してみましょう。
+
+```bash
+cat <<EOF > myapp-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: myapp-secret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: cGFzc3dvcmQxMjM=
+EOF
+
+kubectl apply -f myapp-secret.yaml
+```
+
+`data` フィールドの値は base64 エンコードされている必要があります。<br/>
+上記の例では、
+
+- `YWRtaW4=` は `admin` を base64 エンコードしたもの
+- `cGFzc3dvcmQxMjM=` は `password123` を base64 エンコードしたもの
+
+となります。
+
+これまで同様、`get` や `describe` サブコマンドで Secret リソースの状態を確認できます。
+
+```bash
+kubectl get secret
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+NAME           TYPE     DATA   AGE
+myapp-secret   Opaque   2      81s
+```
+
+</details>
+
+```bash
+kubectl get secret myapp-secret -o yaml
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+apiVersion: v1
+data:
+  password: cGFzc3dvcmQxMjM=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"password":"cGFzc3dvcmQxMjM=","username":"YWRtaW4="},"kind":"Secret","metadata":{"annotations":{},"name":"myapp-secret","namespace":"default"},"type":"Opaque"}
+  creationTimestamp: "2025-09-30T00:45:22Z"
+  name: myapp-secret
+  namespace: default
+  resourceVersion: "13864"
+  uid: a7843304-81c3-47ae-99de-a00ddebf777c
+type: Opaque
+```
+
+</details>
+
+```bash
+kubectl describe secret myapp-secret
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+Name:         myapp-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+password:  11 bytes
+username:  5 bytes
+```
+
+</details>
+
+Secret の値をコマンドラインから確認することもできます。
+
+```bash
+kubectl get secret myapp-secret -o jsonpath='{.data.username}' | base64 -d
+echo
+kubectl get secret myapp-secret -o jsonpath='{.data.password}' | base64 -d
+echo
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+admin
+password123
+```
+
+</details>
+
+次に、Secret を Pod にマウントして使用してみましょう。
+
+Secret は環境変数としてマウントする方法とファイルとしてマウントする方法があります。今回は両方の方法を試してみます。
+
+```bash
+cat <<EOF > secret-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-pod
+spec:
+  containers:
+  - name: myapp-container
+    image: alpine:latest
+    command: ["/bin/sh"]
+    args: ["-c", "sleep 3600"]
+    env:
+    - name: SECRET_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: myapp-secret
+          key: username
+    - name: SECRET_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: myapp-secret
+          key: password
+    volumeMounts:
+    - name: secret-volume
+      mountPath: "/etc/secrets"
+      readOnly: true
+  volumes:
+  - name: secret-volume
+    secret:
+      secretName: myapp-secret
+EOF
+
+kubectl apply -f secret-pod.yaml
+```
+
+Pod が起動したら、Secret が正しくマウントされているか確認してみましょう。
+
+以下のコマンドを実行し、環境変数として設定された Secret を確認します。
+
+```bash
+kubectl exec secret-pod -- env | grep SECRET
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+SECRET_USERNAME=admin
+SECRET_PASSWORD=password123
+```
+
+</details>
+
+ファイルとしてマウントされた Secret はどうでしょうか。
+
+以下のコマンドで、マウントパスの `/etc/secrets` 配下にファイルが作成されていることを確認できます。
+
+```bash
+kubectl exec secret-pod -- ls -la /etc/secrets
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+total 4
+drwxrwxrwt    3 root     root           120 Sep 30 00:50 .
+drwxr-xr-x    1 root     root          4096 Sep 30 00:50 ..
+drwxr-xr-x    2 root     root            80 Sep 30 00:50 ..2025_09_30_00_50_29.788616053
+lrwxrwxrwx    1 root     root            31 Sep 30 00:50 ..data -> ..2025_09_30_00_50_29.788616053
+lrwxrwxrwx    1 root     root            15 Sep 30 00:50 password -> ..data/password
+lrwxrwxrwx    1 root     root            15 Sep 30 00:50 username -> ..data/username
+```
+
+</details>
+
+```bash
+kubectl exec secret-pod -- cat /etc/secrets/username
+echo
+kubectl exec secret-pod -- cat /etc/secrets/password
+echo
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+admin
+password123
+```
+
+</details>
+
+Secret をファイルとしてマウントした場合、Kubernetes は各キーに対応するファイルを作成し、ファイルの内容が Secret の値になります。また、Secret が更新された場合、マウントされたファイルの内容も自動的に更新されます。
+
+ただし、アプリケーションの仕様によっては、コンテナ内で実行中のアプリケーションが Secret の更新を認識しない可能性がある点には注意が必要です。アプリケーション側でファイルの変更を検知する仕組みが必要な場合があります。
+
+最後に、`kubectl create secret` コマンドを使用して Secret を作成する方法も確認してみましょう。
+
+```bash
+# 文字列から直接 Secret を作成
+kubectl create secret generic db-secret \
+  --from-literal=db-host=mysql.example.com \
+  --from-literal=db-port=3306 \
+  --from-literal=db-user=dbuser \
+  --from-literal=db-password=supersecret
+
+# 作成した Secret を確認
+kubectl get secret db-secret -o yaml
+```
+
+<details><summary>出力結果</summary>
+
+```bash
+secret/db-secret created
+apiVersion: v1
+data:
+  db-host: bXlzcWwuZXhhbXBsZS5jb20=
+  db-password: c3VwZXJzZWNyZXQ=
+  db-port: MzMwNg==
+  db-user: ZGJ1c2Vy
+kind: Secret
+metadata:
+  creationTimestamp: "2025-09-30T01:02:12Z"
+  name: db-secret
+  namespace: default
+  resourceVersion: "15288"
+  uid: 23d91b4e-3f65-4272-87a0-914582f1a165
+type: Opaque
+```
+
+</details>
+
+Secret は Kubernetes における機密情報管理の基本的な仕組みです。実際のプロダクション環境では、HashiCorp Vault や AWS Secrets Manager などの外部シークレット管理サービスと連携することが多くなります。
+
+### 1.6 まとめ
+
+本演習では以下のリソースについて学びました。
+
+- Pod
+- Deployment
+- Service
+- Ingress
+- Secret
 
 ここで取り扱ったリソースは全体のごく一部です。他のリソースについても知りたい方は、[Kubernetes Docs](https://kubernetes.io/docs/concepts/) などを見ながらご自身で試してみてください。
+
+### 1.7 環境のクリーンアップ
+
+演習で作成したリソースを削除します。
+
+```bash
+kubectl delete po myapp secret-pod
+kubectl delete deploy myapp-deployment
+kubectl delete svc myapp-service
+kubectl delete ingress myapp-ingress
+kubectl delete secret myapp-secret db-secret
+helm uninstall ingress-nginx -n ingress-nginx
+kubectl delete ns ingress-nginx
+```
 
 ## 2. Kubernetes コンポーネントの把握
 
@@ -1633,19 +1905,6 @@ exit
 
 これらの知識は、Kubernetes の運用管理やトラブルシューティングに役立ちます。
 
-## 環境のクリーンアップ
-
-演習で作成したリソースを削除します。
-
-```bash
-kubectl delete po myapp
-kubectl delete deploy myapp-deployment
-kubectl delete svc myapp-service
-kubectl delete ingress myapp-ingress
-helm uninstall ingress-nginx -n ingress-nginx
-kubectl delete ns ingress-nginx
-```
-
 ## 参考
 
 - Kubernetes Documentation
@@ -1656,6 +1915,7 @@ kubectl delete ns ingress-nginx
   - [Performing a Rolling Update](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
   - [Command line tool (kubectl)](https://kubernetes.io/docs/reference/kubectl/)
   - [Ingress Controllers](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)
+  - [Secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
 
 ---
 

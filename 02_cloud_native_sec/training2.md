@@ -15,6 +15,7 @@
   - [まとめ](#まとめ)
   - [環境のクリーンアップ](#環境のクリーンアップ)
   - [参考](#参考)
+  - [次のステップ](#次のステップ)
 
 ## 1. コンテナブレイクアウトの理解
 
@@ -607,7 +608,7 @@ Security Context でのコンテナブレイクアウトの対策は、十分で
 
 ### 3.1 Pod Security Admission の設定
 
-最初に、新しい namespace を作成して Pod Security Standards (PSS) を適用します。
+最初に、新しい Namespace を作成して Pod Security Standards (PSS) を適用します。
 
 ```bash
 kubectl create namespace pss-test
@@ -641,8 +642,8 @@ pss-test   Active   22m   kubernetes.io/metadata.name=pss-test,pod-security.kube
 
 </details>
 
-この状態で、`pss-test` namespace にホストパスをマウントした Pod を作成してみます。<br/>
-構成は 1.3 で使用したものと同様ですが、namespace のみ変更しています。
+この状態で、`pss-test` Namespace にホストパスをマウントした Pod を作成してみます。<br/>
+構成は 1.3 で使用したものと同様ですが、Namespace のみ変更しています。
 
 ```bash
 cat <<EOF > hostpath-pod-pss.yaml
@@ -695,7 +696,7 @@ hostpath-pod-pss   1/1     Running   0          19s
 </details>
 
 続いて特権コンテナの Pod を作成してみます。<br/>
-構成は 1.2 で使用したものと同様ですが、namespace のみ変更しています。
+構成は 1.2 で使用したものと同様ですが、Namespace のみ変更しています。
 
 ```bash
 cat <<EOF > privileged-pod-pss.yaml
@@ -868,6 +869,8 @@ namespace/pss-test not labeled (server dry run)
 
 ## 環境のクリーンアップ
 
+演習で作成したリソースを削除します。
+
 ```bash
 kubectl delete po privileged-pod hostpath-pod capabilities-dropped-pod nonroot-pod
 kubectl delete ns pss-test
@@ -881,3 +884,11 @@ kubectl delete ns pss-test
   - [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
   - [Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
   - [Apply Pod Security Standards at the Namespace Level](https://kubernetes.io/docs/tutorials/security/ns-level-pss/)
+
+---
+
+## 次のステップ
+
+時間に余裕のある方は、演習3にもチャレンジしてみてください。
+
+- [演習3　Kubernetes セキュリティの実践](./training3.md)

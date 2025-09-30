@@ -178,7 +178,7 @@ selfsubjectrulesreviews.authorization.k8s.io    []                  []          
 </details>
 
 結果の1-2行目から、`kubernetes-admin` がすべてのリソースに対してすべての操作を行えることがわかります。<br/>
-この結果は namespaced であるため、現在は default namespace の情報が表示されています。すべての namespace の情報を知りたい場合、namespace の数だけコマンドを実行する必要があります。
+この結果は namespaced であるため、現在は default Namespace の情報が表示されています。すべての Namespace の情報を知りたい場合、Namespace の数だけコマンドを実行する必要があります。
 
 特定アクションの権限を持つかどうかだけ知りたい場合は、次のようにコマンド実行してください。
 
@@ -350,10 +350,10 @@ selfsubjectrulesreviews.authorization.k8s.io    []                  []          
 
 現在、`developer` ユーザーには特別な権限が付与されていないため、基本的な API 情報の取得のみが可能です。
 
-`developer` ユーザーに対して、特定の namespace での Pod の操作権限を付与しましょう。
+`developer` ユーザーに対して、特定の Namespace での Pod の操作権限を付与しましょう。
 
 ```bash
-# development namespace を作成
+# development Namespace を作成
 kubectl create namespace development
 
 # Role を作成（Pod の読み取り・作成・削除権限）
@@ -394,17 +394,17 @@ EOF
 kubectl apply -f developer-rolebinding.yaml
 ```
 
-development namespace において、Pod の操作を可能にする Role の作成と、`developer` ユーザーへのロールのバインドを行いました。
+development Namespace において、Pod の操作を可能にする Role の作成と、`developer` ユーザーへのロールのバインドを行いました。
 
 権限が正しく付与されているか検証します。
 
 ```bash
-# development namespace での Pod 操作権限を確認
+# development Namespace での Pod 操作権限を確認
 kubectl auth can-i create pods --namespace=development --as=developer
 kubectl auth can-i delete pods --namespace=development --as=developer
 kubectl auth can-i get secrets --namespace=development --as=developer
 
-# default namespace での権限を確認
+# default Namespace での権限を確認
 kubectl auth can-i create pods --namespace=default --as=developer
 ```
 
@@ -419,7 +419,7 @@ no
 
 </details>
 
-想定通り、development namespace 内で Pod リソースのみ操作できるようになっています。
+想定通り、development Namespace 内で Pod リソースのみ操作できるようになっています。
 
 このユーザーの権限で Kubernetes の操作を行う場合、kubeconfig へのユーザー情報の追加と、接続先クラスタとの関連付け設定が必要です。
 
@@ -490,7 +490,7 @@ IdP を使わず作成した `developer` ユーザーは、証明書と鍵情報
 Pod 内から Kubernetes API にアクセスする際は、サービスアカウント（ServiceAccount）を使用します。<br/>
 サービスアカウントに適切な権限を付与し、Pod からの API アクセスを制御してみましょう。
 
-1.2 で作成した development namespace 内に、サービスアカウント `pod-reader` を作成して権限を付与します。
+1.2 で作成した development Namespace 内に、サービスアカウント `pod-reader` を作成して権限を付与します。
 
 ```bash
 kubectl create serviceaccount pod-reader -n development

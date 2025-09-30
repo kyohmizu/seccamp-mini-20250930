@@ -21,26 +21,28 @@
     - [2.4 アプリケーションの開発ライフサイクルとセキュリティの統合](#24-アプリケーションの開発ライフサイクルとセキュリティの統合)
     - [2.5 責任共有モデル](#25-責任共有モデル)
   - [3. クラウドネイティブセキュリティのベストプラクティス](#3-クラウドネイティブセキュリティのベストプラクティス)
-    - [コンテナのセキュリティベストプラクティス](#コンテナのセキュリティベストプラクティス)
-      - [seccomp/AppArmor の有効化](#seccompapparmor-の有効化)
-      - [特権コンテナの禁止](#特権コンテナの禁止)
-      - [distroless イメージの利用](#distroless-イメージの利用)
-    - [Kubernetes のセキュリティベストプラクティス](#kubernetes-のセキュリティベストプラクティス)
-      - [クラスタコンポーネントのセキュリティ](#クラスタコンポーネントのセキュリティ)
-      - [Security Context の適用](#security-context-の適用)
-      - [Secret 管理](#secret-管理)
-      - [RBAC による権限管理](#rbac-による権限管理)
-      - [Pod Security Admission による Pod へのポリシー強制](#pod-security-admission-による-pod-へのポリシー強制)
-      - [ネットワークポリシーによる Pod 間の通信制限](#ネットワークポリシーによる-pod-間の通信制限)
-      - [監視ログの利用](#監視ログの利用)
-  - [セキュリティツールの活用](#セキュリティツールの活用)
-    - [Trivy](#trivy)
-    - [Tetragon](#tetragon)
-    - [OPA (Open Policy Agent) Gatekeeper](#opa-open-policy-agent-gatekeeper)
-    - [External Secrets](#external-secrets)
-    - [cosign](#cosign)
-    - [その他のツール](#その他のツール)
-  - [まとめ](#まとめ)
+    - [3.1 コンテナのセキュリティベストプラクティス](#31-コンテナのセキュリティベストプラクティス)
+      - [3.1.1 seccomp/AppArmor の有効化](#311-seccompapparmor-の有効化)
+      - [3.1.2 特権コンテナの禁止](#312-特権コンテナの禁止)
+      - [3.1.3 distroless イメージの利用](#313-distroless-イメージの利用)
+    - [3.2 Kubernetes のセキュリティベストプラクティス](#32-kubernetes-のセキュリティベストプラクティス)
+      - [3.2.1 クラスタコンポーネントのセキュリティ](#321-クラスタコンポーネントのセキュリティ)
+      - [3.2.2 Security Context の適用](#322-security-context-の適用)
+      - [3.2.3 Secret 管理](#323-secret-管理)
+      - [3.2.4 RBAC による権限管理](#324-rbac-による権限管理)
+      - [3.2.5 Pod Security Admission による Pod へのポリシー強制](#325-pod-security-admission-による-pod-へのポリシー強制)
+      - [3.2.6 ネットワークポリシーによる Pod 間の通信制限](#326-ネットワークポリシーによる-pod-間の通信制限)
+      - [3.2.7 監視ログの利用](#327-監視ログの利用)
+  - [4. セキュリティツールの活用](#4-セキュリティツールの活用)
+    - [4.1 Trivy](#41-trivy)
+    - [4.2 Tetragon](#42-tetragon)
+    - [4.3 OPA (Open Policy Agent) Gatekeeper](#43-opa-open-policy-agent-gatekeeper)
+    - [4.4 External Secrets](#44-external-secrets)
+    - [4.5 cosign](#45-cosign)
+    - [4.6 その他のツール](#46-その他のツール)
+  - [5. 学習コンテンツ](#5-学習コンテンツ)
+    - [5.1 Kubernetes Goat](#51-kubernetes-goat)
+  - [6. まとめ](#6-まとめ)
   - [次のステップ](#次のステップ)
 
 ## 1. 基本的なセキュリティの観点
@@ -201,33 +203,33 @@ https://github.com/cncf/tag-security/blob/main/community/resources/security-whit
 
 本講義ではベストプラクティスの一部しか取り上げることはできませんが、現実のシステムにおいてはすべての項目を検討し、環境に適した対策を優先順位をつけて導入していくことになります。
 
-### コンテナのセキュリティベストプラクティス
+### 3.1 コンテナのセキュリティベストプラクティス
 
 - **参考リンク**
   - https://docs.docker.com/build/building/best-practices/
   - https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html
   - https://container-security.dev/
 
-#### seccomp/AppArmor の有効化
+#### 3.1.1 seccomp/AppArmor の有効化
 
 seccomp (Secure Computing Mode) と AppArmor は Linux カーネルのセキュリティ機能（LSM）で、コンテナの動作を制限することで攻撃リスクを軽減します。
 
 - seccomp: 特定のシステムコールを制限し、不要なカーネル機能へのアクセスを防ぎます。
 - AppArmor: ファイルアクセスやプロセス間通信などを制御し、より詳細なセキュリティポリシーを設定できます。
 
-#### 特権コンテナの禁止
+#### 3.1.2 特権コンテナの禁止
 
 特権 (privileged) コンテナはホストのリソースに広範なアクセス権を持ちます。
 可能な限り使用を避け、必要な場合は最小限の権限で実行します。
 
-#### distroless イメージの利用
+#### 3.1.3 distroless イメージの利用
 
 distroless イメージは最小限のファイルのみを含む軽量なコンテナイメージです。
 これをベースイメージとして利用することで、攻撃対象を最小限に抑えることができます。
 
 Chainguard 社が提供する [Chainguard Images](https://www.chainguard.dev/chainguard-images) には、多くの OSS の distroless イメージが格納されています。
 
-### Kubernetes のセキュリティベストプラクティス
+### 3.2 Kubernetes のセキュリティベストプラクティス
 
 - **参考リンク**
   - https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/
@@ -236,14 +238,14 @@ Chainguard 社が提供する [Chainguard Images](https://www.chainguard.dev/cha
   - https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html
   - https://cloud.hacktricks.xyz/pentesting-cloud/kubernetes-security/kubernetes-hardening
 
-#### クラスタコンポーネントのセキュリティ
+#### 3.2.1 クラスタコンポーネントのセキュリティ
 
 API サーバーや kubelet などのクラスタコンポーネントへのネットワークアクセスを制限し、匿名アクセスを無効化することで、クラスタのセキュリティを向上させます。
 特に API サーバーは Kubernetes クラスタの中心的な役割を果たすため、公開範囲の最小化と適切な認証認可の設定が求められます。
 
 https://kubernetes.io/docs/reference/networking/ports-and-protocols/
 
-#### Security Context の適用
+#### 3.2.2 Security Context の適用
 
 [Security Context](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) を使用して、Pod やコンテナのセキュリティ設定を定義します。
 これにより、Pod がホストシステムにアクセスする際の制限やポリシーを適用できます。
@@ -257,7 +259,7 @@ Security Context の例:
 - **readOnlyRootFilesystem**
   - コンテナの root ファイルシステムを読み取り専用にすることで、コンテナ内での不要なファイル作成や変更を防止します。
 
-#### Secret 管理
+#### 3.2.3 Secret 管理
 
 Secret リソースには認証情報などの機密情報を保存しますが、デフォルトではetcd内にbase64エンコードされた状態で保存されるため（実質的に平文と同等）、追加のセキュリティ対策が必要です。
 
@@ -268,12 +270,12 @@ Secret リソースには認証情報などの機密情報を保存しますが�
 
 本格的な運用では、[HashiCorp Vault](https://github.com/hashicorp/vault) + [External Secrets](https://github.com/external-secrets/external-secrets) のような外部のシークレット管理ツールの使用を推奨します。
 
-#### RBAC による権限管理
+#### 3.2.4 RBAC による権限管理
 
 [RBAC (Role-Based Access Control)](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) は、ユーザーやサービスアカウントに対するアクセス権限を細かく制御します。
 最小特権の原則に従い、ユーザーやアプリケーションに必要最低限の権限を付与します。
 
-#### Pod Security Admission による Pod へのポリシー強制
+#### 3.2.5 Pod Security Admission による Pod へのポリシー強制
 
 [Pod Security Admission (PSA)](https://kubernetes.io/docs/concepts/security/pod-security-admission/) は、Kubernetes クラスタ内で Pod が作成または更新される際に、セキュリティポリシーを適用してクラスタ全体のセキュリティを強化するための仕組みです。<br/>
 PSA を導入することで、Pod がセキュリティベストプラクティスに従うことが保証されます。
@@ -290,7 +292,7 @@ PSA を導入することで、Pod がセキュリティベストプラクティ
 - **audit**: ポリシー違反は監査ログに記録されますが、Pod 作成は許可されます。
 - **warn**: ポリシー違反はユーザーに対して警告を発しますが、Pod 作成は許可されます。
 
-#### ネットワークポリシーによる Pod 間の通信制限
+#### 3.2.6 ネットワークポリシーによる Pod 間の通信制限
 
 ネットワークポリシーを使用して Pod 間の通信を制御し、不要な通信を遮断します。
 Pod 間の通信を最小限に抑えることで、攻撃対象範囲を限定します。
@@ -302,7 +304,7 @@ Kubernetes 標準の L3-4 の [NetworkPolicy](https://kubernetes.io/docs/concept
 
 なお、NetworkPolicy を利用するにはCNIプラグイン（Calico、flannel、Weave Netなど）が NetworkPolicy をサポートしている必要があります。
 
-#### 監視ログの利用
+#### 3.2.7 監視ログの利用
 
 Kubernetes の監査ログは、クラスタ内での全ての API リクエストを記録し、セキュリティやコンプライアンスの要件を満たすための重要な機能です。
 これにより、誰がいつ何を行ったのかを追跡でき、不正アクセスや異常な活動を検知するのに役立ちます。<br/>
@@ -310,14 +312,14 @@ Kubernetes の監査ログは、クラスタ内での全ての API リクエス�
 
 https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/
 
-## セキュリティツールの活用
+## 4. セキュリティツールの活用
 
 Kubernetesのセキュリティを強化するためには、さまざまなツールの活用が効果的です。<br/>
 以下に代表的なセキュリティツールをいくつかご紹介します。
 
 ここで紹介するツール以外にも、「[Cloud Native Landscape](https://landscape.cncf.io/guide#provisioning--security-compliance)」にあるように多数のセキュリティツールが存在するので、色々なツールを探索してみると面白いです。
 
-### Trivy
+### 4.1 Trivy
 
 <img src="https://github.com/aquasecurity/trivy/raw/main/docs/imgs/logo.png" width="120">
 
@@ -333,7 +335,7 @@ CI/CD パイプラインへの統合も容易で、クラウドネイティブ�
 - [kube-bench](https://github.com/aquasecurity/kube-bench)
 - [Kubescape](https://github.com/kubescape/kubescape)
 
-### Tetragon
+### 4.2 Tetragon
 
 <img src="https://github.com/cilium/tetragon/raw/main/docs/assets/icons/logo-dark.svg" width="300">
 
@@ -348,7 +350,7 @@ Tetragon を使用することで、セキュリティイベントの検出や�
 - [Falco](https://github.com/falcosecurity/falco)
 - [Tracee](https://github.com/aquasecurity/tracee)
 
-### OPA (Open Policy Agent) Gatekeeper
+### 4.3 OPA (Open Policy Agent) Gatekeeper
 
 <img src="https://www.openpolicyagent.org/assets/images/logo-text-dark-20ab84c6b2ba2433801b16fa43fe6550.png" width="300">
 
@@ -364,7 +366,7 @@ Open Policy Agent (OPA) と統合されており、Kubernetes リソースに対
 - [Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/)
 - [Validating Admission Policy](https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/)
 
-### External Secrets
+### 4.4 External Secrets
 
 <img src="https://github.com/external-secrets/external-secrets/raw/main/assets/eso-logo-large.png" width="120">
 
@@ -379,7 +381,7 @@ AWS Secrets Manager、HashiCorp Vault などの外部シークレットストア
 - [Secrets Store CSI Driver](https://github.com/kubernetes-sigs/secrets-store-csi-driver)
 - [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
 
-### cosign
+### 4.5 cosign
 
 <img src="https://raw.githubusercontent.com/sigstore/community/main/artwork/cosign/horizontal/color/sigstore_cosign-horizontal-color.svg" width="300">
 
@@ -388,7 +390,7 @@ https://github.com/sigstore/cosign
 Sigstoreプロジェクトの一部である、コンテナイメージの署名と検証を行うためのオープンソースツールです。Kubernetes 環境において、イメージの信頼性と整合性を保証するために使用されます。<br/>
 cosign は、シンプルな CLI ツールとして提供されており、keyless signing（鍵なし署名）やOIDCベースの署名、イメージの検証、SBOM や Attestation（証明）の添付などをサポートしています。
 
-### その他のツール
+### 4.6 その他のツール
 
 - **[Image pull secrets provisioner](https://github.com/pfnet/image-pull-secrets-provisioner)**
   - Kubernetesクラスタ内で ImagePullSecrets を自動的にプロビジョニングするツール。
@@ -403,7 +405,19 @@ cosign は、シンプルな CLI ツールとして提供されており、keyle
 - **[OpenSSF Scorecard](https://github.com/ossf/scorecard)**
   - OSS のセキュリティレベルをチェックし、利用者が OSS の安全性を評価できるようにするためのツール。
 
-## まとめ
+## 5. 学習コンテンツ
+
+### 5.1 Kubernetes Goat
+
+https://github.com/madhuakula/kubernetes-goat
+
+Kubernetes Goat は、Kubernetes 環境におけるセキュリティの脆弱性や設定ミスを学習するため、意図的に脆弱性を含んだ演習プラットフォームです。権限昇格や RBAC の悪用、各種セキュリティツールの導入など、22のシナリオを通じて、攻撃側と防御側の両方の視点から Kubernetes セキュリティを体験できます。
+
+本講義で学んだ理論を実際の攻撃シナリオで検証し、より深い理解を得るための優れた学習リソースです。
+
+![](https://github.com/madhuakula/kubernetes-goat/raw/master/kubernetes-goat-home.png)
+
+## 6. まとめ
 
 - Kubernetes のセキュリティはクラスタ、コンテナなどの複数の要素かつ、開発ライフサイクルの各段階で多層的にアプローチすることが重要です。
 - ベストプラクティスに準拠して Kubernetes 環境を構築し、その上でさまざまなセキュリティツールを活用してセキュリティ運用を効率化します。
@@ -413,4 +427,5 @@ cosign は、シンプルな CLI ツールとして提供されており、keyle
 
 ## 次のステップ
 
-- [演習2 コンテナシステムへの攻撃と対策の実践](./training2.md)
+- [演習2 コンテナシステムへの攻撃とセキュリティ対策](./training2.md)
+- [演習3　Kubernetes セキュリティの実践](./training3.md)

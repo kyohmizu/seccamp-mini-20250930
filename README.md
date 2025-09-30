@@ -51,6 +51,12 @@ Kubernetes クラスタはシングルノード構成でも構いませんが、
 また、コマンド実行には Mac または Linux のターミナル環境を使用してください。<br/>
 Windows の場合は、WSL や Git Bash を使用することで Linux コマンドを実行できます。
 
+確認用コマンド：
+
+```bash
+kubectl version
+```
+
 ## 事前準備
 
 ### ローカル環境の場合
